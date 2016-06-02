@@ -1,0 +1,16 @@
+import javax.tools.ToolProvider
+
+description = """proc"""
+
+dependencies {
+  compile (
+    // Use the `ToolProvider` to help find the classes associated with the
+    // JDK's `langtools` (often installed via the system's `tools.jar`). See:
+    //
+    //     http://stackoverflow.com/a/28805423
+    //     http://stackoverflow.com/a/25628156
+    //
+    files(((URLClassLoader) ToolProvider.getSystemToolClassLoader()).getURLs()),
+  )
+  testCompile group: 'junit', name: 'junit', version:'4.12'
+}

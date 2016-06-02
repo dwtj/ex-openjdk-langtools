@@ -1,0 +1,17 @@
+description = """driver"""
+
+dependencies {
+  /*
+  compile (
+    group: 'me.dwtj.ex.openjdk.langtools.types',
+    name: 'proc',
+    version: '0.1.0-SNAPSHOT'
+  )
+  */
+  compile project(':proc')
+  testCompile (
+    group: 'junit',
+    name: 'junit',
+    version:'4.12'
+  )
+}
