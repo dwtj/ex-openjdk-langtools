@@ -1,7 +1,8 @@
 package me.dwtj.ex.openjdk.langtools.types;
 
 import com.sun.source.util.Trees;
-import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
+import com.sun.tools.javac.tree.JCTree.*;
+import com.sun.tools.javac.tree.TreeScanner;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -29,9 +30,49 @@ public class TypesProc extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+
+        System.out.println();
+
         for (JCCompilationUnit cu : getCompilationUnits(roundEnv)) {
-            System.out.println(cu.toString());
+
+            cu.accept(new TreeScanner() {
+
+                @Override public void visitVarDef(JCVariableDecl varDecl) {
+                    System.out.println(varDecl);
+                    System.out.println("JCVariableDecl.getType():");
+                    varDecl.getType().accept(new TreeScanner() {
+
+                        @Override public void visitIdent(JCIdent tree) {
+                            System.out.println("  JCIdent: " + tree);
+                            System.out.println("  JCIdent.sym: " + tree.sym);
+                        }
+
+                        @Override public void visitTypeIdent(JCPrimitiveTypeTree tree) {
+                            System.out.println("  JCPrimitiveTypeTree: "
+                                                + tree.getPrimitiveTypeKind());
+                        }
+
+                        @Override public void visitTypeArray(JCArrayTypeTree tree) {
+                            System.out.println("  JCArrayTypeTree: " + tree);
+                            System.out.println("  JCArrayTypeTree.getType(): " + tree.getType());
+                        }
+
+                        @Override public void visitAnnotatedType(JCAnnotatedType tree) {
+                            System.out.println("  JCArrayTypeTree: " + tree);
+                            System.out.println("  JCArrayTypeTree.getUnderlyingType(): "
+                                                + tree.getUnderlyingType());
+                        }
+
+                        @Override public void visitSelect(JCFieldAccess tree) {
+                            System.out.println("  JCFieldAccess: " + tree);
+                            System.out.println("  JCFieldAccess.sym: " + tree.sym);
+                        }
+                    });
+                    System.out.println();
+                }
+            });
         }
+
         return false;
     }
 
