@@ -1,0 +1,13 @@
+subprojects {
+    group = 'me.dwtj.ex.openjdk.langtools.tools'
+
+    apply plugin: 'java'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}

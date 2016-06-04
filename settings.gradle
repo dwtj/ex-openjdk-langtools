@@ -1,4 +1,5 @@
-rootProject.name = 'types'
+rootProject.name = 'langtools'
 
-include 'proc'
-include 'driver'
+include 'types'
+include 'types:proc'
+include 'types:driver'
