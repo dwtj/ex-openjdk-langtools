@@ -13,21 +13,17 @@ import com.sun.tools.javac.tree.JCTree;
 import me.dwtj.ex.openjdk.langtools.utils.ExperimentProc;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Set;
 
 /**
  * @author dwtj
  */
-
 @SupportedAnnotationTypes("*")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class TypesProc extends ExperimentProc {
@@ -37,18 +33,25 @@ public class TypesProc extends ExperimentProc {
     }
 
     @Override
-    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    public boolean process() {
         if (!roundEnv.processingOver()) {
-            printBasicTypeInfoOfVariableDeclarations(roundEnv);
+            printListOfAllPriorCompilationUnits();
+            printBasicTypeInfoOfVariableDeclarations();
             lookupTypeElementAndPrintIt("me.dwtj.ex.openjdk.langtools.types.UserDefinedClass");
-            lookupTypeElementAndPrintIt("java.lang.String");
+            //lookupTypeElementAndPrintIt("java.lang.String");
         }
         return false;
     }
 
-    private void printBasicTypeInfoOfVariableDeclarations(RoundEnvironment roundEnv) {
+    private void printListOfAllPriorCompilationUnits() {
+        note("## Prior Compilation Units:");
+        getPriorCompilationUnitTrees().stream()
+                .forEach(cu -> note("  " + cu.getSourceFile().getName()));
+    }
+
+    private void printBasicTypeInfoOfVariableDeclarations() {
         note("## Basic Type Information of Variable Declarations");
-        for (CompilationUnitTree cu : getCompilationUnits(roundEnv)) {
+        for (CompilationUnitTree cu : getPriorCompilationUnitTrees()) {
 
             cu.accept(new TreeScanner<Void,Void>() {
 
@@ -100,11 +103,14 @@ public class TypesProc extends ExperimentProc {
     }
 
     private void lookupTypeElementAndPrintIt(String name) {
-        Elements elements = processingEnv.getElementUtils();
-        TypeElement typeElem = elements.getTypeElement(name);
+        TypeElement typeElem = elementUtils.getTypeElement(name);
+        note(stringifyTypeElement(typeElem));
+    }
+
+    private String stringifyTypeElement(TypeElement typeElem) {
         try (Writer w = new StringWriter()) {
-            elements.printElements(w, typeElem);
-            note(w);
+            elementUtils.printElements(w, typeElem);
+            return w.toString();
         } catch (IOException ex) {
             // This should never happen: according to the class's javadoc, `StringWriter#close()`
             // should never throw an `IOException`.

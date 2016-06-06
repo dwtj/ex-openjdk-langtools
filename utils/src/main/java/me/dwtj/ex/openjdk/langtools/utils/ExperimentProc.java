@@ -12,10 +12,13 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 
 /**
@@ -29,6 +32,9 @@ public abstract class ExperimentProc extends AbstractProcessor {
     protected Types typeUtils;
     protected Trees treeUtils;
 
+    protected Set<? extends TypeElement> roundAnnotations;
+    protected RoundEnvironment roundEnv;
+
     public void init(ProcessingEnvironment procEnv) {
         elementUtils = procEnv.getElementUtils();
         typeUtils = procEnv.getTypeUtils();
@@ -36,22 +42,50 @@ public abstract class ExperimentProc extends AbstractProcessor {
         super.init(procEnv);
     }
 
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        this.roundAnnotations = annotations;
+        this.roundEnv = roundEnv;
+        return process();
+    }
+
+    public abstract boolean process();
+
     /**
-     * Use the given processing environment to get all of the compilation units generated in the
-     * prior round.
+     * Returns the tree representation of the compilation unit in which the given element resides.
      */
-    protected List<CompilationUnitTree> getCompilationUnits(RoundEnvironment roundEnv) {
+    protected CompilationUnitTree getCompilationUnitTree(Element e) {
+        return treeUtils.getPath(e).getCompilationUnit();
+    }
+
+    /**
+     * Returns a newly instantiated list of the tree representations of all compilation units
+     * generated in the prior round.
+     */
+    protected List<CompilationUnitTree> getPriorCompilationUnitTrees() {
         return roundEnv.getRootElements().stream()
-                .map(root -> getCompilationUnit(root))
+                .map(root -> getCompilationUnitTree(root))
                 .collect(toList());
     }
 
     /**
-     * Use the given processing environment to get the compilation unit in which the given element
-     * resides.
+     * Optionally returns the tree representation of any compilation unit which contains a root
+     * type element with the given qualified name which was generated in the prior round. This is
+     * really just a helper method for `getPriorRootTypeElement()` and `getCompilationUnitTree()`.
      */
-    protected CompilationUnitTree getCompilationUnit(Element e) {
-        return treeUtils.getPath(e).getCompilationUnit();
+    protected Optional<CompilationUnitTree> getPriorCompilationUnitTreeContaining(String qualifiedName) {
+        return getPriorRootTypeElement(qualifiedName).map(this::getCompilationUnitTree);
+    }
+
+    /**
+     * Optionally returns a root type element with the given qualified name which was generated.
+     */
+    protected Optional<TypeElement> getPriorRootTypeElement(String qualifiedName) {
+        return roundEnv.getRootElements().stream()
+                .filter(elem -> elem instanceof TypeElement)
+                .map(elem -> (TypeElement) elem)
+                .filter(typeElem -> typeElem.getQualifiedName().contentEquals(qualifiedName))
+                .findAny();
     }
 
     protected void note(String str) {
