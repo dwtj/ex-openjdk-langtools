@@ -21,6 +21,9 @@ import javax.lang.model.element.TypeElement;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author dwtj
@@ -29,6 +32,24 @@ import java.io.Writer;
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class TypesProc extends ExperimentProc {
 
+    Map<String,CompilationUnitTree> knownCompilationUnits = new HashMap<>();
+
+    private final String PKG = "me.dwtj.ex.openjdk.langtools.types";
+    private final String USER_DEFINED_CLASS = PKG + ".UserDefinedClass";
+    private final String TEST_DRIVER = PKG + ".TestDriver";
+
+    private void initKnownCompilationUnits() {
+        Arrays.asList(new String[] {
+            USER_DEFINED_CLASS,
+            TEST_DRIVER
+        }).forEach(this::initKnownCompilationUnit);
+    }
+
+    private void initKnownCompilationUnit(String qualifiedName) {
+        CompilationUnitTree cu = getPriorCompilationUnitTreeContaining(qualifiedName).get();
+        knownCompilationUnits.put(qualifiedName, cu);
+    }
+
     public void init(ProcessingEnvironment procEnv) {
         super.init(procEnv);
     }
@@ -36,10 +57,13 @@ public class TypesProc extends ExperimentProc {
     @Override
     public boolean process() {
         if (!roundEnv.processingOver()) {
+            initKnownCompilationUnits();
             printListOfAllPriorCompilationUnits();
             printBasicTypeInfoOfVariableDeclarations();
             lookupTypeElementAndPrintIt("me.dwtj.ex.openjdk.langtools.types.UserDefinedClass");
             //lookupTypeElementAndPrintIt("java.lang.String");
+            isTheTypeFieldOfAnInvocationSet();
+        } else {
             isTheTypeFieldOfAnInvocationSet();
         }
         return false;
@@ -110,10 +134,8 @@ public class TypesProc extends ExperimentProc {
     }
 
     private void isTheTypeFieldOfAnInvocationSet() {
-        String qualifiedName = "me.dwtj.ex.openjdk.langtools.types.UserDefinedClass";
-        CompilationUnitTree cu = getPriorCompilationUnitTreeContaining(qualifiedName).get();
         note("Is a method invocation tree's type field set?");
-        cu.accept(new TreeScanner<Void,Void>() {
+        knownCompilationUnits.get(USER_DEFINED_CLASS).accept(new TreeScanner<Void,Void>() {
             @Override public Void visitMethodInvocation(MethodInvocationTree tree, Void v) {
                 JCTree.JCMethodInvocation invocation = (JCTree.JCMethodInvocation) tree;
                 note("invocation = " + invocation);
