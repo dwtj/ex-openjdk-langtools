@@ -46,6 +46,8 @@ public class TypesProc extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (!roundEnv.processingOver()) {
             printBasicTypeInfoOfVariableDeclarations(roundEnv);
+            lookupTypeElementAndPrintIt("me.dwtj.ex.openjdk.langtools.types.UserDefinedClass");
+            lookupTypeElementAndPrintIt("java.lang.String");
         }
         return false;
     }
@@ -100,6 +102,19 @@ public class TypesProc extends AbstractProcessor {
                     return null;
                 }
             }, null);
+        }
+    }
+
+    private void lookupTypeElementAndPrintIt(String name) {
+        Elements elements = processingEnv.getElementUtils();
+        TypeElement typeElem = elements.getTypeElement(name);
+        try (Writer w = new StringWriter()) {
+            elements.printElements(w, typeElem);
+            note(w);
+        } catch (IOException ex) {
+            // This should never happen: according to the class's javadoc, `StringWriter#close()`
+            // should never throw an `IOException`.
+            throw new AssertionError(ex);
         }
     }
 
