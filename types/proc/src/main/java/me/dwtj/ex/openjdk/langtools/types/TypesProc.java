@@ -1,7 +1,5 @@
 package me.dwtj.ex.openjdk.langtools.types;
 
-import static java.util.stream.Collectors.toList;
-
 import com.sun.source.tree.AnnotatedTypeTree;
 import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -10,24 +8,20 @@ import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.PrimitiveTypeTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreeScanner;
-import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
+import me.dwtj.ex.openjdk.langtools.utils.ExperimentProc;
 
-import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
-import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -36,7 +30,7 @@ import java.util.Set;
 
 @SupportedAnnotationTypes("*")
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
-public class TypesProc extends AbstractProcessor {
+public class TypesProc extends ExperimentProc {
 
     public void init(ProcessingEnvironment procEnv) {
         super.init(procEnv);
@@ -54,7 +48,7 @@ public class TypesProc extends AbstractProcessor {
 
     private void printBasicTypeInfoOfVariableDeclarations(RoundEnvironment roundEnv) {
         note("## Basic Type Information of Variable Declarations");
-        for (CompilationUnitTree cu : getCompilationUnits(processingEnv, roundEnv)) {
+        for (CompilationUnitTree cu : getCompilationUnits(roundEnv)) {
 
             cu.accept(new TreeScanner<Void,Void>() {
 
@@ -124,52 +118,5 @@ public class TypesProc extends AbstractProcessor {
 
     private static Symbol getSymbol(MemberSelectTree tree) {
         return ((JCTree.JCFieldAccess) tree).sym;
-    }
-
-    /**
-     * Use the given processing environment to get all of the compilation units generated in the
-     * prior round.
-     */
-    private static List<CompilationUnitTree> getCompilationUnits(ProcessingEnvironment procEnv,
-                                                                 RoundEnvironment roundEnv){
-        return roundEnv.getRootElements().stream()
-                .map(root -> getCompilationUnit(procEnv, root))
-                .collect(toList());
-    }
-
-    /**
-     * Use the given processing environment to get the compilation unit in which the given element
-     * resides.
-     */
-    private static CompilationUnitTree getCompilationUnit(ProcessingEnvironment env, Element e) {
-        return Trees.instance(env).getPath(e).getCompilationUnit();
-    }
-
-    private void note(String str) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, str);
-    }
-    private void note(Object obj) {
-        note(obj.toString());
-    }
-
-    private void warning(String str) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, str);
-    }
-    private void warning(Object obj) {
-        warning(obj.toString());
-    }
-
-    private void mandatoryWarning(String str) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING, str);
-    }
-    private void mandatoryWarning(Object obj) {
-        mandatoryWarning(obj.toString());
-    }
-
-    private void error(String str) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, str);
-    }
-    private void error(Object obj) {
-        error(obj.toString());
     }
 }

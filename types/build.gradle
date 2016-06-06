@@ -1,5 +1,5 @@
 subprojects {
-    group = 'me.dwtj.ex.openjdk.langtools.tools'
+    group = 'me.dwtj.ex.openjdk.langtools.types'
 
     apply plugin: 'java'
 

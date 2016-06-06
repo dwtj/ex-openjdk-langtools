@@ -1,5 +1,5 @@
 rootProject.name = 'langtools'
 
-include 'types'
-include 'types:proc'
-include 'types:driver'
+include 'utils'
+include 'types', 'types:proc', 'types:driver'
+include 'expr', 'expr:proc', 'expr:driver'
