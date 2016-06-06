@@ -44,7 +44,9 @@ public class TypesProc extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        printBasicTypeInfoOfVariableDeclarations(roundEnv);
+        if (!roundEnv.processingOver()) {
+            printBasicTypeInfoOfVariableDeclarations(roundEnv);
+        }
         return false;
     }
 
