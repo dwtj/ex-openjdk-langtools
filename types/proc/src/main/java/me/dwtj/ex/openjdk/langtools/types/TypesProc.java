@@ -22,6 +22,11 @@ import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
+import javax.tools.Diagnostic;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.List;
 import java.util.Set;
 
@@ -44,53 +49,52 @@ public class TypesProc extends AbstractProcessor {
     }
 
     private void printBasicTypeInfoOfVariableDeclarations(RoundEnvironment roundEnv) {
-        log();
-        log("## Basic Type Information of Variable Declarations");
+        note("## Basic Type Information of Variable Declarations");
         for (CompilationUnitTree cu : getCompilationUnits(processingEnv, roundEnv)) {
 
             cu.accept(new TreeScanner<Void,Void>() {
 
                 @Override public Void visitVariable(VariableTree var, Void v) {
-                    log(var);
-                    log("VariableTree.getType():");
+                    note("VariableTree: " + var);
+                    note("VariableTree.getType():");
                     var.getType().accept(new TreeScanner<Void,Void>() {
 
                         @Override public Void visitIdentifier(IdentifierTree tree, Void v) {
-                            log("  IdentifierTree: " + tree);
-                            log("  Symbol: " + getSymbol(tree));
+                            note("  IdentifierTree: " + tree);
+                            note("  Symbol: " + getSymbol(tree));
                             return null;
                         }
 
                         @Override public Void visitPrimitiveType(PrimitiveTypeTree tree, Void v) {
-                            log("  PrimitiveTypeTree.getPrimitiveTypeKind(): "
-                                 + tree.getPrimitiveTypeKind());
+                            note("  PrimitiveTypeTree.getPrimitiveTypeKind(): "
+                                  + tree.getPrimitiveTypeKind());
                             return null;
                         }
 
                         @Override public Void visitArrayType(ArrayTypeTree tree, Void v) {
-                            log("  ArrayTypeTree: " + tree);
-                            log("  ArrayTypeTree.getType(): " + tree.getType());
-                            log("  ArrayTypeTree.getType().getClass(): "
-                                 + tree.getType().getClass());
+                            note("  ArrayTypeTree: " + tree);
+                            note("  ArrayTypeTree.getType(): " + tree.getType());
+                            note("  ArrayTypeTree.getType().getClass(): "
+                                  + tree.getType().getClass());
                             return null;
                         }
 
                         @Override public Void visitAnnotatedType(AnnotatedTypeTree tree, Void v) {
-                            log("  AnnotatedTypeTree: " + tree);
-                            log("  AnnotatedTypeTree.getUnderlyingType(): "
-                                 + tree.getUnderlyingType());
-                            log("  AnnotatedTypeTree.getUnderlyingType().getClass(): "
-                                 + tree.getUnderlyingType().getClass());
+                            note("  AnnotatedTypeTree: " + tree);
+                            note("  AnnotatedTypeTree.getUnderlyingType(): "
+                                  + tree.getUnderlyingType());
+                            note("  AnnotatedTypeTree.getUnderlyingType().getClass(): "
+                                  + tree.getUnderlyingType().getClass());
                             return null;
                         }
 
                         @Override public Void visitMemberSelect(MemberSelectTree tree, Void v) {
-                            log("  MemberSelectTree: " + tree);
-                            log("  Symbol: " + getSymbol(tree));
+                            note("  MemberSelectTree: " + tree);
+                            note("  Symbol: " + getSymbol(tree));
                             return null;
                         }
                     }, null);
-                    log();
+                    note("");
                     return null;
                 }
             }, null);
@@ -124,15 +128,31 @@ public class TypesProc extends AbstractProcessor {
         return Trees.instance(env).getPath(e).getCompilationUnit();
     }
 
-    private static void log(String str) {
-        System.out.println(str);
+    private void note(String str) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, str);
+    }
+    private void note(Object obj) {
+        note(obj.toString());
     }
 
-    private static void log() {
-        log("");
+    private void warning(String str) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, str);
+    }
+    private void warning(Object obj) {
+        warning(obj.toString());
     }
 
-    private static void log(Object obj) {
-        log(obj.toString());
+    private void mandatoryWarning(String str) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING, str);
+    }
+    private void mandatoryWarning(Object obj) {
+        mandatoryWarning(obj.toString());
+    }
+
+    private void error(String str) {
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, str);
+    }
+    private void error(Object obj) {
+        error(obj.toString());
     }
 }
