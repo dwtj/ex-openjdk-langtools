@@ -5,6 +5,7 @@ import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.PrimitiveTypeTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreeScanner;
@@ -39,6 +40,7 @@ public class TypesProc extends ExperimentProc {
             printBasicTypeInfoOfVariableDeclarations();
             lookupTypeElementAndPrintIt("me.dwtj.ex.openjdk.langtools.types.UserDefinedClass");
             //lookupTypeElementAndPrintIt("java.lang.String");
+            isTheTypeFieldOfAnInvocationSet();
         }
         return false;
     }
@@ -105,6 +107,21 @@ public class TypesProc extends ExperimentProc {
     private void lookupTypeElementAndPrintIt(String name) {
         TypeElement typeElem = elementUtils.getTypeElement(name);
         note(stringifyTypeElement(typeElem));
+    }
+
+    private void isTheTypeFieldOfAnInvocationSet() {
+        String qualifiedName = "me.dwtj.ex.openjdk.langtools.types.UserDefinedClass";
+        CompilationUnitTree cu = getPriorCompilationUnitTreeContaining(qualifiedName).get();
+        note("Is a method invocation tree's type field set?");
+        cu.accept(new TreeScanner<Void,Void>() {
+            @Override public Void visitMethodInvocation(MethodInvocationTree tree, Void v) {
+                JCTree.JCMethodInvocation invocation = (JCTree.JCMethodInvocation) tree;
+                note("invocation = " + invocation);
+                note("invocation.type = " + invocation.type);
+                note((invocation.type != null) ? "yes" : "no");
+                return null;
+            }
+        }, null);
     }
 
     private String stringifyTypeElement(TypeElement typeElem) {
