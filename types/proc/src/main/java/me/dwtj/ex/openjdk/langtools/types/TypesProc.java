@@ -52,6 +52,7 @@ public class TypesProc extends ExperimentProc {
 
     public void init(ProcessingEnvironment procEnv) {
         super.init(procEnv);
+        addPostAnalysisCallbacks();
     }
 
     @Override
@@ -67,6 +68,10 @@ public class TypesProc extends ExperimentProc {
             isTheTypeFieldOfAnInvocationSet();
         }
         return false;
+    }
+
+    private void addPostAnalysisCallbacks() {
+        addPostAnalysisCallback(this::isTheTypeFieldOfAnInvocationSet);
     }
 
     private void printListOfAllPriorCompilationUnits() {
@@ -134,8 +139,12 @@ public class TypesProc extends ExperimentProc {
     }
 
     private void isTheTypeFieldOfAnInvocationSet() {
+        isTheTypeFieldOfAnInvocationSet(knownCompilationUnits.get(USER_DEFINED_CLASS));
+    }
+
+    private void isTheTypeFieldOfAnInvocationSet(CompilationUnitTree cu) {
         note("Is a method invocation tree's type field set?");
-        knownCompilationUnits.get(USER_DEFINED_CLASS).accept(new TreeScanner<Void,Void>() {
+        cu.accept(new TreeScanner<Void,Void>() {
             @Override public Void visitMethodInvocation(MethodInvocationTree tree, Void v) {
                 JCTree.JCMethodInvocation invocation = (JCTree.JCMethodInvocation) tree;
                 note("invocation = " + invocation);
@@ -144,6 +153,10 @@ public class TypesProc extends ExperimentProc {
                 return null;
             }
         }, null);
+    }
+
+    private void isTheTypeFieldOfAnInvocationSet(CompilationUnitTree cu, TypeElement _) {
+        isTheTypeFieldOfAnInvocationSet(cu);
     }
 
     private String stringifyTypeElement(TypeElement typeElem) {

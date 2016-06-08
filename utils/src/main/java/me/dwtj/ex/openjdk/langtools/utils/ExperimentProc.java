@@ -3,6 +3,9 @@ package me.dwtj.ex.openjdk.langtools.utils;
 import static java.util.stream.Collectors.toList;
 
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.TaskEvent;
+import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -19,6 +22,7 @@ import javax.tools.Diagnostic;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 
 /**
@@ -31,15 +35,17 @@ public abstract class ExperimentProc extends AbstractProcessor {
     protected Elements elementUtils;
     protected Types typeUtils;
     protected Trees treeUtils;
+    protected JavacTask javacTask;
 
     protected Set<? extends TypeElement> roundAnnotations;
     protected RoundEnvironment roundEnv;
 
     public void init(ProcessingEnvironment procEnv) {
+        super.init(procEnv);
         elementUtils = procEnv.getElementUtils();
         typeUtils = procEnv.getTypeUtils();
         treeUtils = Trees.instance(procEnv);
-        super.init(procEnv);
+        javacTask = JavacTask.instance(procEnv);
     }
 
     @Override
@@ -66,6 +72,29 @@ public abstract class ExperimentProc extends AbstractProcessor {
         return roundEnv.getRootElements().stream()
                 .map(root -> getCompilationUnitTree(root))
                 .collect(toList());
+    }
+
+    /**
+     * A helper-method for adding a {@link TaskListener} to the current {@link JavacTask} which
+     * applies the given callback to the unboxed values any post-analysis javac {@link TaskEvent}s
+     * the given callback will not be applied to any other javac events.
+     */
+    protected void addPostAnalysisCallback(BiConsumer<CompilationUnitTree, TypeElement> cb) {
+        javacTask.addTaskListener(new TaskListener() {
+            @Override public void started(TaskEvent e) {
+                // Ignore all of these events.
+            }
+            @Override public void finished(TaskEvent e) {
+                if (e.getKind() == TaskEvent.Kind.ANALYZE) {
+                    assert e.getCompilationUnit() != null:
+                            "Expected a post-analysis javac event to have a compilation unit tree.";
+                    assert e.getTypeElement() != null:
+                            "Expected a post-analysis javac event to have a type element.";
+                    cb.accept(e.getCompilationUnit(), e.getTypeElement());
+                }
+                // Otherwise, ignore any other kind of event.
+            }
+        });
     }
 
     /**
