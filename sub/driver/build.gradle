@@ -1,3 +1,7 @@
+compileJava.options.compilerArgs += [
+  '-sourcepath', sourceSets.main.java.srcDirs.join(':')
+]
+
 dependencies {
   compile project(':sub:proc')
 }
