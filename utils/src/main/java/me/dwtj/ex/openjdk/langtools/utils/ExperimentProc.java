@@ -52,10 +52,12 @@ public abstract class ExperimentProc extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         this.roundAnnotations = annotations;
         this.roundEnv = roundEnv;
-        return process();
+        try {
+            return process();
+        } catch (Throwable t) { throw new RuntimeException(t); }
     }
 
-    public abstract boolean process();
+    public abstract boolean process() throws Throwable;
 
     /**
      * Returns the tree representation of the compilation unit in which the given element resides.
