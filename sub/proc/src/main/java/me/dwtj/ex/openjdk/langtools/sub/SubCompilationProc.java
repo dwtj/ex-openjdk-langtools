@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 
 import static javax.tools.StandardLocation.CLASS_PATH;
+import static me.dwtj.java.compiler.runner.CompilationTaskBuilder.StandardJavaFileManagerConfig.makeNullConfig;
 import static me.dwtj.java.compiler.runner.CompilationTaskBuilder.newBuilder;
 
 /**
@@ -59,7 +60,7 @@ public class SubCompilationProc extends ExperimentProc {
     private void trySubCompilation() throws IOException {
         note("");
         note("Trying sub-compilation...");
-        StandardJavaFileManagerConfig config = new StandardJavaFileManagerConfig();
+        StandardJavaFileManagerConfig config = makeNullConfig();
         config.setLocationsLike(extractFileManager(processingEnv));
         File tempClassOutputDir = CompilationTaskBuilder.tempDir();
         note("tempClassOutputDir: " + tempClassOutputDir.getAbsolutePath());
