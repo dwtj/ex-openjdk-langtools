@@ -1,6 +1,6 @@
 dependencies {
   compile (
     project(':utils'),
-    'me.dwtj:java-compile-utils:0.1.1',
+    'me.dwtj:java-compile-utils:0.1.2',
   )
 }

@@ -11,15 +11,19 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 
+import static javax.tools.JavaFileObject.Kind.CLASS;
 import static javax.tools.StandardLocation.CLASS_PATH;
-import static me.dwtj.java.compiler.runner.CompilationTaskBuilder.StandardJavaFileManagerConfig.makeNullConfig;
+import static me.dwtj.java.compiler.runner.CompilationTaskBuilder.StandardJavaFileManagerConfig.makeConfig;
 import static me.dwtj.java.compiler.runner.CompilationTaskBuilder.newBuilder;
 
 /**
@@ -58,16 +62,19 @@ public class SubCompilationProc extends ExperimentProc {
     }
 
     private void trySubCompilation() throws IOException {
+        // The name of the class to be compiled within the sub-compilation.
+        String canonicalName = "me.dwtj.ex.openjdk.langtools.sub.SubDriverClass";
+        //String binaryName = "L" + canonicalName.replace('.', '/') + ";";
+
         note("");
         note("Trying sub-compilation...");
-        StandardJavaFileManagerConfig config = makeNullConfig();
-        config.setLocationsLike(extractFileManager(processingEnv));
+        StandardJavaFileManagerConfig config = makeConfig(extractFileManager(processingEnv));
         File tempClassOutputDir = CompilationTaskBuilder.tempDir();
         note("tempClassOutputDir: " + tempClassOutputDir.getAbsolutePath());
         config.setClassOutputDir(tempClassOutputDir);
         JavaCompiler.CompilationTask task = newBuilder()
                 .setFileManagerConfig(config)
-                .addClass("me.dwtj.ex.openjdk.langtools.sub.SubDriverClass")
+                .addClass(canonicalName)
                 .build();
         task.call();
         note("Sub-compilation complete.");
