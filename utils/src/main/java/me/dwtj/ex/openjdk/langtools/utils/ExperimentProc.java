@@ -9,6 +9,7 @@ import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -35,6 +36,7 @@ public abstract class ExperimentProc extends AbstractProcessor {
     protected Elements elementUtils;
     protected Types typeUtils;
     protected Trees treeUtils;
+    protected Filer filer;
     protected JavacTask javacTask;
 
     protected Set<? extends TypeElement> roundAnnotations;
@@ -45,6 +47,7 @@ public abstract class ExperimentProc extends AbstractProcessor {
         elementUtils = procEnv.getElementUtils();
         typeUtils = procEnv.getTypeUtils();
         treeUtils = Trees.instance(procEnv);
+        filer = procEnv.getFiler();
         javacTask = JavacTask.instance(procEnv);
     }
 
