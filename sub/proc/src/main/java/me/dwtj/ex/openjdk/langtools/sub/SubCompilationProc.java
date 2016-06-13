@@ -38,6 +38,8 @@ public class SubCompilationProc extends ExperimentProc {
         if (roundEnv.processingOver()) {
             noteClassPathOfFileManagerFromToolProvider();
             noteClassPathOfFileManagerFromFiler();
+            //trySubCompilation();
+        } else {
             trySubCompilation();
         }
         return false;
@@ -72,14 +74,40 @@ public class SubCompilationProc extends ExperimentProc {
         File tempClassOutputDir = CompilationTaskBuilder.tempDir();
         note("tempClassOutputDir: " + tempClassOutputDir.getAbsolutePath());
         config.setClassOutputDir(tempClassOutputDir);
+
         JavaCompiler.CompilationTask task = newBuilder()
                 .setFileManagerConfig(config)
                 .addClass(canonicalName)
                 .build();
         task.call();
         note("Sub-compilation complete.");
+
+        note("Trying to copy the sub-compiled class to the annotation processor's `Filer`...");
+        // Use another file manager to get the sub-compiled class and pipe its contents to another
+        // class file made by the annotation processor's Filer.
+        JavaFileObject dest = filer.createClassFile(canonicalName);
+        config = makeConfig().addToClassPath(tempClassOutputDir);  // We read a class from here.
+        StandardJavaFileManager fileManager = config.config(
+            ToolProvider.getSystemJavaCompiler().getStandardFileManager(null, null, null)
+        );
+        JavaFileObject src = fileManager.getJavaFileForInput(CLASS_PATH, canonicalName, CLASS);
+        pipe(src.openInputStream(), dest.openOutputStream());
+        note("Finished copying.");
+
         // TODO: Delete all temporary files on exit.
         note("");
+    }
+
+    /**
+     * Taken from <a href="http://stackoverflow.com/a/14634903">this StackOverflow answer</a>.
+     */
+    private void pipe(InputStream is, OutputStream os) throws IOException {
+        int n;
+        byte[] buffer = new byte[1024];
+        while ((n = is.read(buffer)) > -1) {
+            os.write(buffer, 0, n);   // Don't allow any extra bytes to creep in, final write
+        }
+        os.close();
     }
 
     /**
